@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build AI Transcript"
+  short_description: "Build an exhaustive AI context bible"
+  default_prompt: "Use $build-ai-transcript to checkpoint this conversation into an exhaustive context bible for a future AI."
