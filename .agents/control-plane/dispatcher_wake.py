@@ -11,6 +11,7 @@ import subprocess
 import time
 
 from watcher import inspect
+from watcher import CONTROL_FILES
 
 SIGNALS = {"ACTIONABLE", "TIMEOUT", "INVALID"}
 
@@ -18,6 +19,8 @@ SIGNALS = {"ACTIONABLE", "TIMEOUT", "INVALID"}
 def fingerprint(directory: Path, result: dict[str, object]) -> str:
     digest = hashlib.sha256()
     for path in sorted(directory.glob("*.json")):
+        if path.name in CONTROL_FILES:
+            continue
         digest.update(path.name.encode())
         digest.update(path.read_bytes())
     digest.update(str(result["outcome"]).encode())

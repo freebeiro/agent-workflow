@@ -12,6 +12,7 @@ import sys
 from checkin import validate
 
 TERMINAL = {"DONE", "BLOCKED", "WAITING_INPUT", "SESSION_UNAVAILABLE"}
+CONTROL_FILES = {"dispatcher-check-required.json"}
 
 
 def inspect(directory: Path, timeout_minutes: float) -> dict[str, object]:
@@ -19,6 +20,8 @@ def inspect(directory: Path, timeout_minutes: float) -> dict[str, object]:
     states: list[dict[str, object]] = []
     invalid = 0
     for path in sorted(directory.glob("*.json")):
+        if path.name in CONTROL_FILES:
+            continue
         try:
             value = validate(json.loads(path.read_text(encoding="utf-8")))
             timestamp = datetime.fromisoformat(value["timestamp"].replace("Z", "+00:00"))
