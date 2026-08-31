@@ -60,3 +60,16 @@ state. The watcher does not wake or call an external service. Codex heartbeat
 automations must remain the host-specific fallback; if the host cannot perform
 conditional wakes, configure a silent heartbeat and accept that the host may
 wake the Dispatcher periodically.
+
+For event-driven CLI operation, use the supervisor. It polls locally as often
+as desired and resumes the named Dispatcher session only once per new signal:
+
+```bash
+python3 .agents/control-plane/dispatcher_wake.py .agents/state \
+  --session-id DISPATCHER_SESSION_ID --interval-seconds 2 --dry-run
+```
+
+Remove `--dry-run` only after confirming the session ID and Codex CLI login.
+The command uses the local Codex CLI session; it does not call an external API.
+The Desktop UI may not reflect CLI-resumed turns reliably, so this is intended
+for a headless/CLI Dispatcher with the UI used for observation.

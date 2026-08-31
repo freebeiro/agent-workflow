@@ -6,6 +6,7 @@ from pathlib import Path
 
 from checkin import validate, write_checkin
 from watcher import inspect
+from dispatcher_wake import run_once
 
 
 def state(status="ACTIVE", timestamp=None):
@@ -42,6 +43,17 @@ class WatcherTests(unittest.TestCase):
             Path(root, "agent.json").write_text(json.dumps({"status": "IDLE"}))
             result = inspect(Path(root), 10)
             self.assertEqual(result["outcome"], "INVALID")
+
+    def test_dispatcher_wake_is_deduplicated_and_dry_run(self):
+        with tempfile.TemporaryDirectory() as root:
+            directory = Path(root) / "states"
+            marker = Path(root) / "marker"
+            directory.mkdir()
+            write_checkin(directory / "agent.json", state("DONE"))
+            first = run_once(directory, 10, marker, ["false"], True)
+            second = run_once(directory, 10, marker, ["false"], True)
+            self.assertTrue(first["triggered"])
+            self.assertFalse(second["triggered"])
 
 
 if __name__ == "__main__":
