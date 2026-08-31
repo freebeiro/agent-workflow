@@ -7,6 +7,7 @@ from pathlib import Path
 from checkin import validate, write_checkin
 from watcher import inspect
 from dispatcher_wake import run_once
+from codex_watch import run_once as watch_once
 
 
 def state(status="ACTIVE", timestamp=None):
@@ -54,6 +55,19 @@ class WatcherTests(unittest.TestCase):
             second = run_once(directory, 10, marker, ["false"], True)
             self.assertTrue(first["triggered"])
             self.assertFalse(second["triggered"])
+
+    def test_local_watch_emits_signal_once_per_actionable_change(self):
+        with tempfile.TemporaryDirectory() as root:
+            directory = Path(root) / "states"
+            directory.mkdir()
+            signal = Path(root) / "signal.json"
+            marker = Path(root) / "marker"
+            write_checkin(directory / "agent.json", state("DONE"))
+            first = watch_once(directory, signal, marker, 10)
+            second = watch_once(directory, signal, marker, 10)
+            self.assertTrue(first["emitted"])
+            self.assertFalse(second["emitted"])
+            self.assertEqual(json.loads(signal.read_text())["event"], "dispatcher_check_required")
 
 
 if __name__ == "__main__":

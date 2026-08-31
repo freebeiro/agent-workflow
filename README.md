@@ -73,3 +73,17 @@ Remove `--dry-run` only after confirming the session ID and Codex CLI login.
 The command uses the local Codex CLI session; it does not call an external API.
 The Desktop UI may not reflect CLI-resumed turns reliably, so this is intended
 for a headless/CLI Dispatcher with the UI used for observation.
+
+For the UI-compatible, non-invasive mode, run `codex_watch.py` instead. It
+polls every two seconds by default, consumes no model tokens, never calls the
+Dispatcher, and atomically writes one durable signal per new actionable state:
+
+```bash
+python3 .agents/control-plane/codex_watch.py .agents/state \
+  --signal .agents/state/dispatcher-check-required.json
+```
+
+The existing heartbeat can read that signal on its next run. This provides
+early local detection without changing the automation schedule. Remove the
+signal only after the Dispatcher has recorded the corresponding handoff
+boundary; the watcher will emit it again only after a new state change.
