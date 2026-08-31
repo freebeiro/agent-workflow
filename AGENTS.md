@@ -55,6 +55,12 @@ Expensive reasoning context belongs on architecture and judgment. Routine
 control-plane logistics should remain with the Dispatcher, and routing stays
 provider-neutral and economical as specified in `.agents/ROUTING.md`.
 
+For low-cost liveness, agents may write the compact check-in schema and use the
+local watcher under `.agents/control-plane/`. The watcher may classify state,
+but it must not call external APIs, load full agent context, treat `IDLE` as
+progress, or claim that a Codex host performed a conditional wake when it did
+not. Host-specific heartbeat scheduling remains a project-level configuration.
+
 ## Skill-first operation
 
 At the beginning of every task:

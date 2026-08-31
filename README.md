@@ -36,3 +36,27 @@ project operational state.
 
 Projects should pin a release or commit when reproducibility matters. The
 workflow is intentionally provider-neutral; provider mappings remain adapters.
+
+## Low-cost liveness check-ins
+
+Agents can write one compact JSON check-in per task:
+
+```bash
+python3 .agents/control-plane/checkin.py .agents/state/agent-1.json \
+  --agent-id agent-1 --task-id task-1 --status ACTIVE \
+  --timestamp 2026-08-31T12:00:00+00:00 --next-action continue \
+  --eta 2m --report-ref tasks/reports/task-1.md
+```
+
+A local watcher can run every 2 minutes without loading agent context:
+
+```bash
+python3 .agents/control-plane/watcher.py .agents/state --json
+```
+
+It returns `QUIET` while work is active, `ACTIONABLE` when all observed
+agents are terminal, `TIMEOUT` for stale active work, and `INVALID` for bad
+state. The watcher does not wake or call an external service. Codex heartbeat
+automations must remain the host-specific fallback; if the host cannot perform
+conditional wakes, configure a silent heartbeat and accept that the host may
+wake the Dispatcher periodically.
