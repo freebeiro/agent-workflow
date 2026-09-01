@@ -52,6 +52,21 @@ python3 .agents/control-plane/checkin.py .agents/state/agent-1.json \
   --eta 2m --report-ref tasks/reports/task-1.md
 ```
 
+When the installer activates the macOS watcher, use its external state
+directory instead of a repository-local one:
+
+```bash
+STATE_DIR="$HOME/.codex/agent-workflow/my-project/state"
+python3 .agents/control-plane/checkin.py "$STATE_DIR/agent-1.json" \
+  --agent-id agent-1 --task-id task-1 --status ACTIVE \
+  --timestamp 2026-08-31T12:00:00+00:00 --next-action continue \
+  --eta 2m --report-ref tasks/reports/task-1.md
+```
+
+The shared `AGENTS.md` contract requires this check-in at assignment start,
+meaningful boundaries, and assignment end. The Dispatcher puts the same
+instruction in worker briefs; routine `ACTIVE` updates remain silent.
+
 A local watcher can run every 2 minutes without loading agent context:
 
 ```bash

@@ -45,6 +45,11 @@ routing a new model.
    A final report ends substantive work for that assignment;
    a later fix requires a new dispatch. This notification supplements, and
    never replaces, the operational-handoff refresh required by `AGENTS.md`.
+8. Every dispatched worker also writes a compact liveness check-in: `ACTIVE`
+   on start/resume and `DONE`, `BLOCKED`, `WAITING_INPUT`, or
+   `SESSION_UNAVAILABLE` before ending. The check-in is for the local watcher
+   and must not be used as a substitute for the report, explicit wait/join, or
+   handoff refresh. `IDLE` is not a valid workflow state.
 
 ## Capability classes
 
