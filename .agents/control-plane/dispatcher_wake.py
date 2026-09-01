@@ -52,7 +52,8 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
     marker = args.marker or args.directory / ".dispatcher-wake"
-    command = ["codex", "exec", "resume", args.session_id, "Check compact control-plane signal:"]
+    # `resume` is a top-level CLI command. `codex exec resume` is not valid.
+    command = ["codex", "resume", args.session_id, "Check compact control-plane signal:"]
     while True:
         print(json.dumps(run_once(args.directory, args.timeout_minutes, marker, command, args.dry_run), sort_keys=True), flush=True)
         if args.once:
