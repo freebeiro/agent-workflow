@@ -20,7 +20,7 @@ def inspect(directory: Path, timeout_minutes: float) -> dict[str, object]:
     states: list[dict[str, object]] = []
     invalid = 0
     for path in sorted(directory.glob("*.json")):
-        if path.name in CONTROL_FILES:
+        if path.name in CONTROL_FILES or path.name.endswith("-handoff-state.json"):
             continue
         try:
             value = validate(json.loads(path.read_text(encoding="utf-8")))
