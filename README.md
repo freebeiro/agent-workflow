@@ -8,14 +8,18 @@ Dispatcher, Architect/Reviewer, and Executor topology.
 From a cloned copy:
 
 ```bash
-./install.sh /path/to/project
+./install.sh --project-id my-project /path/to/project
 ```
 
 From GitHub:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/freebeiro/agent-workflow/main/install.sh | bash -s -- /path/to/project
+curl -fsSL https://raw.githubusercontent.com/freebeiro/agent-workflow/main/install.sh | bash -s -- --project-id my-project /path/to/project
 ```
+
+Add `--project-id my-project` to the GitHub command. On macOS, installation
+also activates an isolated `launchd` watcher under `~/.codex/agent-workflow/`.
+Use `--no-watch` to install files without activating it.
 
 The installer copies the shared `.agents/` framework. If the target has no
 `AGENTS.md`, it installs the shared contract. If one already exists, it leaves
