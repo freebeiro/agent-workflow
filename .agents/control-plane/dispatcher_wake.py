@@ -40,7 +40,7 @@ def run_once(directory: Path, timeout_minutes: float, marker: Path, command: lis
         if not dry_run:
             message = command[-1] + "\n" + json.dumps(result, sort_keys=True)
             subprocess.run(command[:-1] + [message], check=True)
-    return {"outcome": result["outcome"], "triggered": triggered, "agent_count": result["agent_count"]}
+    return {"outcome": result["outcome"], "triggered": triggered, "agent_count": result["agent_count"], "agents": result["states"]}
 
 
 def main() -> int:
