@@ -47,6 +47,13 @@ def run_once(directory: Path, timeout_minutes: float, marker: Path, command: lis
             "agents": states}
 
 
+def pretty(value: dict[str, object]) -> str:
+    lines = [f"DISPATCHER | {value['outcome']} | working={len(value['working'])} terminal={len(value['terminal'])} | triggered={value['triggered']}"]
+    for agent in value["agents"]:
+        lines.append(f"  {agent['status']:<20} {agent['agent_id']} | task={agent['task_id']} | age={agent['age_seconds']}s")
+    return "\n".join(lines)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", type=Path)
@@ -63,7 +70,7 @@ def main() -> int:
     codex_bin = os.environ.get("CODEX_BIN", "codex")
     command = [codex_bin, "queue", "--thread", args.session_id, "--message", "Check compact control-plane signal:"]
     while True:
-        print(json.dumps(run_once(args.directory, args.timeout_minutes, marker, command, args.dry_run), sort_keys=True), flush=True)
+        print(pretty(run_once(args.directory, args.timeout_minutes, marker, command, args.dry_run)), flush=True)
         if args.once:
             return 0
         time.sleep(args.interval_seconds)
