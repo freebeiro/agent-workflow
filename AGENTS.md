@@ -61,7 +61,9 @@ of `DONE`, `BLOCKED`, `WAITING_INPUT`, or `SESSION_UNAVAILABLE` before leaving
 the assignment. Use `.agents/control-plane/checkin.py`; do not use `IDLE`.
 Update the check-in at meaningful boundaries, keep the full report at the
 referenced path, and include only `agent_id`, `task_id`, `status`, `timestamp`,
-`next_action`, `eta`, and `report_ref` in the state file. A terminal check-in
+`next_action`, `eta`, and `report_ref` in the state file. Use a stable,
+human-readable `agent_id` such as `Jason`, `Einstein`, `Halley`, or
+`Executor-1`; do not use a session UUID as the display identity. A terminal check-in
 does not replace the required final report or operational-handoff refresh.
 
 The Dispatcher includes this check-in contract in every worker brief and

@@ -32,15 +32,11 @@ def run_once(directory: Path, signal_path: Path, marker: Path, timeout_minutes: 
             "working": [item for item in states if item["status"] == "ACTIVE"],
             "terminal": [item for item in states if item["status"] != "ACTIVE"],
             "agents": states}
-
-
 def pretty(value: dict[str, object]) -> str:
     lines = [f"WATCHER | {value['outcome']} | working={len(value['working'])} terminal={len(value['terminal'])} | emitted={value['emitted']}"]
     for agent in value["agents"]:
         lines.append(f"  {agent['status']:<20} {agent['agent_id']} | task={agent['task_id']} | age={agent['age_seconds']}s")
     return "\n".join(lines)
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", type=Path)

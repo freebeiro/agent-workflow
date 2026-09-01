@@ -15,6 +15,7 @@ from watcher import inspect
 from watcher import CONTROL_FILES
 
 SIGNALS = {"ACTIONABLE", "TIMEOUT", "INVALID"}
+TERMINAL = {"DONE", "BLOCKED", "WAITING_INPUT", "SESSION_UNAVAILABLE"}
 
 
 def fingerprint(directory: Path, result: dict[str, object]) -> str:
@@ -26,6 +27,19 @@ def fingerprint(directory: Path, result: dict[str, object]) -> str:
         digest.update(path.read_bytes())
     digest.update(str(result["outcome"]).encode())
     return digest.hexdigest()
+
+
+def consume_terminal(directory: Path) -> None:
+    """Remove only terminal presence files after the Dispatcher was queued."""
+    for path in directory.glob("*.json"):
+        if path.name in CONTROL_FILES:
+            continue
+        try:
+            value = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            continue
+        if isinstance(value, dict) and value.get("status") in TERMINAL:
+            path.unlink(missing_ok=True)
 
 
 def run_once(directory: Path, timeout_minutes: float, marker: Path, command: list[str], dry_run: bool) -> dict[str, object]:
@@ -40,20 +54,17 @@ def run_once(directory: Path, timeout_minutes: float, marker: Path, command: lis
         if not dry_run:
             message = command[-1] + "\n" + json.dumps(result, sort_keys=True)
             subprocess.run(command[:-1] + [message], check=True)
+            consume_terminal(directory)
     states = result["states"]
     return {"outcome": result["outcome"], "triggered": triggered, "agent_count": result["agent_count"],
             "working": [item for item in states if item["status"] == "ACTIVE"],
             "terminal": [item for item in states if item["status"] != "ACTIVE"],
             "agents": states}
-
-
 def pretty(value: dict[str, object]) -> str:
     lines = [f"DISPATCHER | {value['outcome']} | working={len(value['working'])} terminal={len(value['terminal'])} | triggered={value['triggered']}"]
     for agent in value["agents"]:
         lines.append(f"  {agent['status']:<20} {agent['agent_id']} | task={agent['task_id']} | age={agent['age_seconds']}s")
     return "\n".join(lines)
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", type=Path)
