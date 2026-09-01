@@ -15,6 +15,7 @@ from watcher import inspect
 from watcher import CONTROL_FILES
 
 SIGNALS = {"ACTIONABLE", "TIMEOUT", "INVALID"}
+TERMINAL = {"DONE", "BLOCKED", "WAITING_INPUT", "SESSION_UNAVAILABLE"}
 
 
 def fingerprint(directory: Path, result: dict[str, object]) -> str:
@@ -26,6 +27,19 @@ def fingerprint(directory: Path, result: dict[str, object]) -> str:
         digest.update(path.read_bytes())
     digest.update(str(result["outcome"]).encode())
     return digest.hexdigest()
+
+
+def consume_terminal(directory: Path) -> None:
+    """Remove only terminal presence files after the Dispatcher was queued."""
+    for path in directory.glob("*.json"):
+        if path.name in CONTROL_FILES:
+            continue
+        try:
+            value = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            continue
+        if isinstance(value, dict) and value.get("status") in TERMINAL:
+            path.unlink(missing_ok=True)
 
 
 def run_once(directory: Path, timeout_minutes: float, marker: Path, command: list[str], dry_run: bool) -> dict[str, object]:
@@ -40,7 +54,12 @@ def run_once(directory: Path, timeout_minutes: float, marker: Path, command: lis
         if not dry_run:
             message = command[-1] + "\n" + json.dumps(result, sort_keys=True)
             subprocess.run(command[:-1] + [message], check=True)
-    return {"outcome": result["outcome"], "triggered": triggered, "agent_count": result["agent_count"]}
+            consume_terminal(directory)
+    states = result["states"]
+    return {"outcome": result["outcome"], "triggered": triggered, "agent_count": result["agent_count"],
+            "working": [item for item in states if item["status"] == "ACTIVE"],
+            "terminal": [item for item in states if item["status"] != "ACTIVE"],
+            "agents": states}
 
 
 def main() -> int:
