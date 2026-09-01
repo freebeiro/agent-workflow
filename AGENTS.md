@@ -55,11 +55,22 @@ Expensive reasoning context belongs on architecture and judgment. Routine
 control-plane logistics should remain with the Dispatcher, and routing stays
 provider-neutral and economical as specified in `.agents/ROUTING.md`.
 
-For low-cost liveness, agents may write the compact check-in schema and use the
-local watcher under `.agents/control-plane/`. The watcher may classify state,
-but it must not call external APIs, load full agent context, treat `IDLE` as
-progress, or claim that a Codex host performed a conditional wake when it did
-not. Host-specific heartbeat scheduling remains a project-level configuration.
+For low-cost liveness, every Architect/Reviewer or Executor assignment must
+write the compact check-in schema: `ACTIVE` when starting or resuming, and one
+of `DONE`, `BLOCKED`, `WAITING_INPUT`, or `SESSION_UNAVAILABLE` before leaving
+the assignment. Use `.agents/control-plane/checkin.py`; do not use `IDLE`.
+Update the check-in at meaningful boundaries, keep the full report at the
+referenced path, and include only `agent_id`, `task_id`, `status`, `timestamp`,
+`next_action`, `eta`, and `report_ref` in the state file. A terminal check-in
+does not replace the required final report or operational-handoff refresh.
+
+The Dispatcher includes this check-in contract in every worker brief and
+mechanically relays it if a receiving agent did not get the brief. It does not
+need to be awakened for routine `ACTIVE` updates. The local watcher under
+`.agents/control-plane/` may classify state, but it must not call external APIs,
+load full agent context, treat `IDLE` as progress, or claim that a Codex host
+performed a conditional wake when it did not. Host-specific heartbeat
+scheduling remains a project-level configuration.
 
 ## Skill-first operation
 

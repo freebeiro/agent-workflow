@@ -117,6 +117,18 @@ Subagent (general-purpose):
 
     ## Report Format
 
+    ## Liveness Check-in
+
+    Before starting or resuming work, write an `ACTIVE` check-in using
+    `.agents/control-plane/checkin.py`. Update it at meaningful boundaries.
+    Before ending the assignment, write exactly one terminal check-in:
+    `DONE`, `BLOCKED`, `WAITING_INPUT`, or `SESSION_UNAVAILABLE`. Do not use
+    `IDLE`; idle is not evidence of progress. The check-in must contain only
+    `agent_id`, `task_id`, `status`, `timestamp`, `next_action`, `eta`, and
+    `report_ref`, where `report_ref` points to the full report below. A terminal
+    check-in does not replace the final report or the operational-handoff
+    refresh.
+
     Write your full report to [REPORT_FILE]:
     - What you implemented (or what you attempted, if blocked)
     - What you tested and test results
