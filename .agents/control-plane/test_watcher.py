@@ -68,6 +68,8 @@ class WatcherTests(unittest.TestCase):
             self.assertTrue(first["emitted"])
             self.assertFalse(second["emitted"])
             self.assertEqual(json.loads(signal.read_text())["event"], "dispatcher_check_required")
+            self.assertEqual(first["terminal"][0]["status"], "DONE")
+            self.assertEqual(first["terminal"][0]["status"], "DONE")
 
     def test_signal_file_is_not_reinterpreted_as_agent_checkin(self):
         with tempfile.TemporaryDirectory() as root:

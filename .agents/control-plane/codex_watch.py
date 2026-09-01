@@ -27,7 +27,11 @@ def run_once(directory: Path, signal_path: Path, marker: Path, timeout_minutes: 
         temporary = signal_path.with_suffix(signal_path.suffix + ".tmp")
         temporary.write_text(json.dumps(payload, sort_keys=True) + "\n", encoding="utf-8")
         temporary.replace(signal_path)
-    return {"outcome": outcome, "emitted": emitted, "agent_count": result["agent_count"], "agents": result["states"]}
+    states = result["states"]
+    return {"outcome": outcome, "emitted": emitted, "agent_count": result["agent_count"],
+            "working": [item for item in states if item["status"] == "ACTIVE"],
+            "terminal": [item for item in states if item["status"] != "ACTIVE"],
+            "agents": states}
 
 
 def main() -> int:
