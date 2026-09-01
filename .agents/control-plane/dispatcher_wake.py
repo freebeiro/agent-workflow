@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 import time
@@ -37,7 +38,8 @@ def run_once(directory: Path, timeout_minutes: float, marker: Path, command: lis
         marker.parent.mkdir(parents=True, exist_ok=True)
         marker.write_text(current + "\n", encoding="utf-8")
         if not dry_run:
-            subprocess.run(command + [json.dumps(result, sort_keys=True)], check=True)
+            message = command[-1] + "\n" + json.dumps(result, sort_keys=True)
+            subprocess.run(command[:-1] + [message], check=True)
     return {"outcome": result["outcome"], "triggered": triggered, "agent_count": result["agent_count"]}
 
 
@@ -52,8 +54,10 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
     marker = args.marker or args.directory / ".dispatcher-wake"
-    # `resume` is a top-level CLI command. `codex exec resume` is not valid.
-    command = ["codex", "resume", args.session_id, "Check compact control-plane signal:"]
+    # Queue through the local app-server daemon so the exact existing task is
+    # targeted without opening a second interactive session.
+    codex_bin = os.environ.get("CODEX_BIN", "codex")
+    command = [codex_bin, "queue", "--thread", args.session_id, "--message", "Check compact control-plane signal:"]
     while True:
         print(json.dumps(run_once(args.directory, args.timeout_minutes, marker, command, args.dry_run), sort_keys=True), flush=True)
         if args.once:
