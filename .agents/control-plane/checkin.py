@@ -25,7 +25,11 @@ def validate(value: object) -> dict[str, str]:
 
 def write_checkin(path: Path, values: dict[str, str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(validate(values), sort_keys=True, ensure_ascii=False) + "\n", encoding="utf-8")
+    value = validate(values)
+    path.write_text(json.dumps(value, sort_keys=True, ensure_ascii=False) + "\n", encoding="utf-8")
+    history = path.with_name(path.name + ".history.jsonl")
+    with history.open("a", encoding="utf-8") as stream:
+        stream.write(json.dumps({"status": value["status"], "timestamp": value["timestamp"]}) + "\n")
 
 
 def main() -> int:
