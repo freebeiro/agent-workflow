@@ -39,7 +39,7 @@ class WatcherTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root:
             path = Path(root) / "agent.json"
             path.write_text(json.dumps(state("DONE")))
-            self.assertEqual(inspect(Path(root), 10)["outcome"], "INVALID")
+            self.assertEqual(inspect(Path(root), 10)["outcome"], "INVALID_CHECKIN")
 
     def test_stale_active_agent_times_out(self):
         old = (datetime.now(timezone.utc) - timedelta(minutes=11)).isoformat()
@@ -51,7 +51,13 @@ class WatcherTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root:
             Path(root, "agent.json").write_text(json.dumps({"status": "IDLE"}))
             result = inspect(Path(root), 10)
-            self.assertEqual(result["outcome"], "INVALID")
+            self.assertEqual(result["outcome"], "INVALID_CHECKIN")
+
+    def test_empty_state_is_not_invalid(self):
+        with tempfile.TemporaryDirectory() as root:
+            result = inspect(Path(root), 10)
+            self.assertEqual(result["outcome"], "NO_OBSERVABLE_CHECKINS")
+            self.assertEqual(result["invalid_file_count"], 0)
 
     def test_dispatcher_wake_is_deduplicated_and_dry_run(self):
         with tempfile.TemporaryDirectory() as root:

@@ -14,7 +14,7 @@ import time
 from watcher import inspect
 from watcher import CONTROL_FILES
 
-SIGNALS = {"ACTIONABLE", "TIMEOUT", "INVALID"}
+SIGNALS = {"ACTIONABLE", "TIMEOUT", "INVALID_CHECKIN"}
 TERMINAL = {"DONE", "BLOCKED", "WAITING_INPUT", "SESSION_UNAVAILABLE"}
 
 

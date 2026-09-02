@@ -36,14 +36,16 @@ def inspect(directory: Path, timeout_minutes: float) -> dict[str, object]:
     timed_out = any(item["age_seconds"] > timeout_minutes * 60 for item in states if item["status"] == "ACTIVE")
     all_terminal = bool(states) and all(item["status"] in TERMINAL for item in states)
     if invalid:
-        outcome = "INVALID"
+        outcome = "INVALID_CHECKIN"
     elif timed_out:
         outcome = "TIMEOUT"
     elif all_terminal:
         outcome = "ACTIONABLE"
+    elif not states:
+        outcome = "NO_OBSERVABLE_CHECKINS"
     else:
         outcome = "QUIET"
-    return {"outcome": outcome, "agent_count": len(states), "invalid_count": invalid, "all_terminal": all_terminal, "timed_out": timed_out, "states": states}
+    return {"outcome": outcome, "agent_count": len(states), "valid_agent_count": len(states), "invalid_file_count": invalid, "invalid_count": invalid, "all_terminal": all_terminal, "timed_out": timed_out, "states": states}
 
 
 def main() -> int:
