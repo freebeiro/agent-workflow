@@ -247,6 +247,18 @@ relays questions, status, and file references. It must not perform substantive
 planning, execution, review, or decision-making, and it must not inject worker
 reasoning or large briefs into the owner-facing conversation.
 
+### Dispatcher continue-until-terminal rule
+
+The Dispatcher must treat every worker completion, failure, unblock, review
+result, and actionable watcher signal as a state-machine transition. Before
+ending its turn it must refresh the operational handoff, identify the exact
+next action, resume or summon the Architect, dispatch the next approved step,
+and perform the required native wait/join or event-wait. It may stop only at a
+legitimate terminal state, an explicit Owner decision gate, an unrecoverable
+failure, or `SESSION_UNAVAILABLE` when no approved replacement is available.
+Worker `DONE`, an idle session, or a completion notification alone is never
+permission to stop.
+
 For each bounded task or scene, the dispatcher creates or resumes one
 sufficiently capable architect. The architect owns source interpretation,
 plans, task decomposition, model selection, authority questions, integration,

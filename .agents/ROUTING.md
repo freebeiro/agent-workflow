@@ -50,6 +50,12 @@ routing a new model.
    `SESSION_UNAVAILABLE` before ending. The check-in is for the local watcher
    and must not be used as a substitute for the report, explicit wait/join, or
    handoff refresh. `IDLE` is not a valid workflow state.
+9. After consuming a worker result, the Dispatcher must continue the state
+   machine: refresh the handoff, resolve the next action through the Architect
+   when judgment is needed, dispatch/resume the next approved step, and wait
+   for its result. It may stop only at a legitimate terminal state, an
+   explicit Owner decision gate, an unrecoverable failure, or unavailable
+   replacement capacity. Worker `DONE` or session idle is not workflow `DONE`.
 
 ## Capability classes
 
