@@ -30,8 +30,16 @@ class WatcherTests(unittest.TestCase):
 
     def test_all_terminal_agents_are_actionable(self):
         with tempfile.TemporaryDirectory() as root:
-            write_checkin(Path(root) / "agent.json", state("DONE"))
+            path = Path(root) / "agent.json"
+            write_checkin(path, state("ACTIVE"))
+            write_checkin(path, state("DONE"))
             self.assertEqual(inspect(Path(root), 10)["outcome"], "ACTIONABLE")
+
+    def test_terminal_without_active_is_invalid(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root) / "agent.json"
+            path.write_text(json.dumps(state("DONE")))
+            self.assertEqual(inspect(Path(root), 10)["outcome"], "INVALID")
 
     def test_stale_active_agent_times_out(self):
         old = (datetime.now(timezone.utc) - timedelta(minutes=11)).isoformat()
@@ -62,7 +70,9 @@ class WatcherTests(unittest.TestCase):
             directory.mkdir()
             signal = Path(root) / "signal.json"
             marker = Path(root) / "marker"
-            write_checkin(directory / "agent.json", state("DONE"))
+            path = directory / "agent.json"
+            write_checkin(path, state("ACTIVE"))
+            write_checkin(path, state("DONE"))
             first = watch_once(directory, signal, marker, 10)
             second = watch_once(directory, signal, marker, 10)
             self.assertTrue(first["emitted"])
@@ -77,7 +87,9 @@ class WatcherTests(unittest.TestCase):
             directory.mkdir()
             signal = Path(root) / "dispatcher-check-required.json"
             marker = Path(root) / "marker"
-            write_checkin(directory / "agent.json", state("DONE"))
+            path = directory / "agent.json"
+            write_checkin(path, state("ACTIVE"))
+            write_checkin(path, state("DONE"))
             watch_once(directory, signal, marker, 10)
             signal.replace(directory / signal.name)
             result = inspect(directory, 10)

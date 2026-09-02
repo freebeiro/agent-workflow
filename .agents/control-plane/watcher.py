@@ -24,6 +24,10 @@ def inspect(directory: Path, timeout_minutes: float) -> dict[str, object]:
             continue
         try:
             value = validate(json.loads(path.read_text(encoding="utf-8")))
+            if value["status"] in TERMINAL:
+                history = path.with_name(path.name + ".history.jsonl")
+                if not history.exists() or '"status": "ACTIVE"' not in history.read_text(encoding="utf-8"):
+                    raise ValueError("terminal state has no prior ACTIVE check-in")
             timestamp = datetime.fromisoformat(value["timestamp"].replace("Z", "+00:00"))
             age = (now - timestamp.astimezone(timezone.utc)).total_seconds()
             states.append({"file": path.name, "agent_id": value["agent_id"], "task_id": value["task_id"], "status": value["status"], "age_seconds": round(age, 3)})
