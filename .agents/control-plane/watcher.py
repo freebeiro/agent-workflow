@@ -14,7 +14,7 @@ from checkin import validate
 from registry import load
 
 TERMINAL = {"DONE", "BLOCKED", "WAITING_INPUT", "SESSION_UNAVAILABLE"}
-CONTROL_FILES = {"dispatcher-check-required.json"}
+CONTROL_FILES = {"dispatcher-check-required.json", "registry.json"}
 READ_RETRIES = 3
 READ_DELAY_SECONDS = 0.05
 
