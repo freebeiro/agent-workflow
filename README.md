@@ -35,6 +35,24 @@ The installer never changes product documents, `CONTEXT.md`,
 Shared: skills, routing policy, provider adapters, templates, and handoff
 validation tooling.
 
+Optional browser dashboard: create a JSON configuration with each project's
+state, runtime, and source paths, then run the installed read-only dashboard.
+It refreshes every second:
+
+```json
+{"projects":[{"project_id":"my-project","state":"/home/me/.codex/agent-workflow/my-project/state","runtime":"/home/me/.codex/agent-workflow/my-project/control-plane","source":"/path/to/my-project/.agents/control-plane"}]}
+```
+
+```bash
+python3 ~/.codex/agent-workflow/my-project/control-plane/dashboard.py \
+  --config ~/.codex/agent-workflow/dashboard-projects.json \
+  --token "use-a-long-local-secret"
+```
+
+Open `http://127.0.0.1:8765` locally. For mobile access outside home, bind
+explicitly to the private Tailscale interface with `--host 100.x.y.z`; do not
+bind publicly without a private network and token.
+
 Local: project profile, product context, specifications, source code, and
 project operational state.
 

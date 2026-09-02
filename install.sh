@@ -70,7 +70,7 @@ printf 'Installed shared agent workflow at %s (source ref: %s)\n' "$target/.agen
 if [[ "$activate_watch" == true && "$(uname -s)" == "Darwin" ]]; then
   runtime_root="${CODEX_HOME:-$HOME/.codex}/agent-workflow/$project_id"
   mkdir -p "$runtime_root/control-plane" "$runtime_root/state" "$HOME/Library/LaunchAgents"
-  for file in checkin.py watcher.py dispatcher_wake.py codex_watch.py registry.py; do
+  for file in checkin.py watcher.py dispatcher_wake.py codex_watch.py registry.py healthcheck.py dashboard.py; do
     cp "$source_root/.agents/control-plane/$file" "$runtime_root/control-plane/$file"
     chmod +x "$runtime_root/control-plane/$file"
   done
