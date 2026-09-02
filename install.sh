@@ -70,9 +70,16 @@ printf 'Installed shared agent workflow at %s (source ref: %s)\n' "$target/.agen
 if [[ "$activate_watch" == true && "$(uname -s)" == "Darwin" ]]; then
   runtime_root="${CODEX_HOME:-$HOME/.codex}/agent-workflow/$project_id"
   mkdir -p "$runtime_root/control-plane" "$runtime_root/state" "$HOME/Library/LaunchAgents"
+  shared_runtime_root="${CODEX_HOME:-$HOME/.codex}/agent-workflow/runtime/${ref//\//_}"
+  mkdir -p "$shared_runtime_root"
   for file in checkin.py watcher.py dispatcher_wake.py codex_watch.py registry.py healthcheck.py dashboard.py; do
-    cp "$source_root/.agents/control-plane/$file" "$runtime_root/control-plane/$file"
-    chmod +x "$runtime_root/control-plane/$file"
+    cp "$source_root/.agents/control-plane/$file" "$shared_runtime_root/$file"
+    chmod +x "$shared_runtime_root/$file"
+    if [[ -e "$runtime_root/control-plane/$file" || -L "$runtime_root/control-plane/$file" ]]; then
+      mkdir -p "$runtime_root/control-plane-pre-symlink"
+      mv "$runtime_root/control-plane/$file" "$runtime_root/control-plane-pre-symlink/$file"
+    fi
+    ln -s "$shared_runtime_root/$file" "$runtime_root/control-plane/$file"
   done
   label="com.codex.agent-workflow.$project_id.codex-watch"
   plist="$HOME/Library/LaunchAgents/$label.plist"
@@ -103,6 +110,7 @@ PY
   launchctl bootstrap "gui/$(id -u)" "$plist"
   launchctl kickstart -k "gui/$(id -u)/$label"
   printf 'Activated local watcher for project %s at %s\n' "$project_id" "$runtime_root"
+  printf 'Shared control-plane runtime: %s\n' "$shared_runtime_root"
 else
   printf 'Watcher activation skipped; install the shared runtime manually for this host.\n'
 fi
