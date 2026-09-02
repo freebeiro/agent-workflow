@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -26,7 +28,20 @@ def validate(value: object) -> dict[str, str]:
 def write_checkin(path: Path, values: dict[str, str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     value = validate(values)
-    path.write_text(json.dumps(value, sort_keys=True, ensure_ascii=False) + "\n", encoding="utf-8")
+    payload = json.dumps(value, sort_keys=True, ensure_ascii=False) + "\n"
+    fd, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary_name, path)
+    except BaseException:
+        try:
+            os.unlink(temporary_name)
+        except FileNotFoundError:
+            pass
+        raise
     history = path.with_name(path.name + ".history.jsonl")
     with history.open("a", encoding="utf-8") as stream:
         stream.write(json.dumps({"status": value["status"], "timestamp": value["timestamp"]}) + "\n")
