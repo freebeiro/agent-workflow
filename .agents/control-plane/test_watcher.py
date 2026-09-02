@@ -1,6 +1,7 @@
 import json
 import tempfile
 import unittest
+from unittest.mock import patch
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -106,6 +107,32 @@ class WatcherTests(unittest.TestCase):
             result = inspect(root, 10, registry)
             self.assertEqual(result["states"][0]["display_name"], "Jason")
             self.assertEqual(result["states"][0]["role"], "Executor")
+
+    def test_terminal_file_is_preserved_after_dispatcher_wake(self):
+        with tempfile.TemporaryDirectory() as root:
+            directory = Path(root) / "states"; directory.mkdir()
+            path = directory / "agent.json"
+            write_checkin(path, state("ACTIVE")); write_checkin(path, state("DONE"))
+            run_once(directory, 10, Path(root) / "marker", ["false"], True)
+            self.assertTrue(path.exists())
+
+    def test_watcher_retries_transient_partial_json(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root) / "agent.json"
+            path.write_text("{\"partial\":", encoding="utf-8")
+            valid = json.dumps(state())
+            original = Path.read_text
+            calls = {"count": 0}
+            def flaky_read(target, *args, **kwargs):
+                if target == path:
+                    calls["count"] += 1
+                    if calls["count"] == 2:
+                        original(target, *args, **kwargs)
+                return valid if target == path and calls["count"] >= 2 else original(target, *args, **kwargs)
+            with patch.object(Path, "read_text", flaky_read):
+                result = inspect(Path(root), 10)
+            self.assertEqual(result["outcome"], "QUIET")
+            self.assertGreaterEqual(calls["count"], 2)
 
 
 if __name__ == "__main__":

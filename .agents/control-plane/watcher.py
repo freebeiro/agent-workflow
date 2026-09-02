@@ -8,12 +8,28 @@ import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import sys
+import time
 
 from checkin import validate
 from registry import load
 
 TERMINAL = {"DONE", "BLOCKED", "WAITING_INPUT", "SESSION_UNAVAILABLE"}
 CONTROL_FILES = {"dispatcher-check-required.json"}
+READ_RETRIES = 3
+READ_DELAY_SECONDS = 0.05
+
+
+def read_checkin(path: Path) -> dict[str, str]:
+    last_error: Exception | None = None
+    for attempt in range(READ_RETRIES):
+        try:
+            return validate(json.loads(path.read_text(encoding="utf-8")))
+        except (OSError, ValueError, json.JSONDecodeError) as error:
+            last_error = error
+            if attempt + 1 < READ_RETRIES:
+                time.sleep(READ_DELAY_SECONDS)
+    assert last_error is not None
+    raise last_error
 
 
 def inspect(directory: Path, timeout_minutes: float, registry: Path | None = None) -> dict[str, object]:
@@ -25,7 +41,7 @@ def inspect(directory: Path, timeout_minutes: float, registry: Path | None = Non
         if path.name in CONTROL_FILES:
             continue
         try:
-            value = validate(json.loads(path.read_text(encoding="utf-8")))
+            value = read_checkin(path)
             if value["status"] in TERMINAL:
                 history = path.with_name(path.name + ".history.jsonl")
                 if not history.exists() or '"status": "ACTIVE"' not in history.read_text(encoding="utf-8"):
