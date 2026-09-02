@@ -79,7 +79,7 @@ def main() -> int:
     # Queue through the local app-server daemon so the exact existing task is
     # targeted without opening a second interactive session.
     codex_bin = os.environ.get("CODEX_BIN", "codex")
-    command = [codex_bin, "queue", "--thread", args.session_id, "--message", "Check compact control-plane signal:"]
+    command = [codex_bin, "queue", "--thread", args.session_id, "--message", "Mandatory control-plane transition: read the compact signal, refresh the operational handoff, resume/summon the Architect, dispatch the next approved step, and wait/join. Do not stop at worker DONE; only stop at a legitimate terminal or explicit Owner gate."]
     while True:
         print(pretty(run_once(args.directory, args.timeout_minutes, marker, command, args.dry_run)), flush=True)
         if args.once:

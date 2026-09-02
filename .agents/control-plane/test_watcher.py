@@ -84,6 +84,7 @@ class WatcherTests(unittest.TestCase):
             self.assertTrue(first["emitted"])
             self.assertFalse(second["emitted"])
             self.assertEqual(json.loads(signal.read_text())["event"], "dispatcher_check_required")
+            self.assertEqual(json.loads(signal.read_text())["next_required_action"], "resume_or_summon_architect_and_dispatch_next_step")
             self.assertEqual(first["terminal"][0]["status"], "DONE")
             self.assertEqual(first["terminal"][0]["status"], "DONE")
 

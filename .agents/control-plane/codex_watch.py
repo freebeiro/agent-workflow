@@ -23,7 +23,7 @@ def run_once(directory: Path, signal_path: Path, marker: Path, timeout_minutes: 
         marker.parent.mkdir(parents=True, exist_ok=True)
         signal_path.parent.mkdir(parents=True, exist_ok=True)
         marker.write_text(current + "\n", encoding="utf-8")
-        payload = {"event": "dispatcher_check_required", "reason": outcome.lower(), "created_at": datetime.now(timezone.utc).isoformat(), "summary": result}
+        payload = {"event": "dispatcher_check_required", "reason": outcome.lower(), "next_required_action": "resume_or_summon_architect_and_dispatch_next_step" if outcome in {"ACTIONABLE", "TIMEOUT"} else "inspect_invalid_state", "created_at": datetime.now(timezone.utc).isoformat(), "summary": result}
         temporary = signal_path.with_suffix(signal_path.suffix + ".tmp")
         temporary.write_text(json.dumps(payload, sort_keys=True) + "\n", encoding="utf-8")
         temporary.replace(signal_path)
