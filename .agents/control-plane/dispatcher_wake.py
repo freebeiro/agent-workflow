@@ -42,8 +42,8 @@ def consume_terminal(directory: Path) -> None:
             path.unlink(missing_ok=True)
 
 
-def run_once(directory: Path, timeout_minutes: float, marker: Path, command: list[str], dry_run: bool) -> dict[str, object]:
-    result = inspect(directory, timeout_minutes)
+def run_once(directory: Path, timeout_minutes: float, marker: Path, command: list[str], dry_run: bool, registry: Path | None = None) -> dict[str, object]:
+    result = inspect(directory, timeout_minutes, registry)
     signal = result["outcome"] in SIGNALS
     current = fingerprint(directory, result) if signal else ""
     previous = marker.read_text(encoding="utf-8").strip() if marker.exists() else ""
@@ -60,11 +60,8 @@ def run_once(directory: Path, timeout_minutes: float, marker: Path, command: lis
             "working": [item for item in states if item["status"] == "ACTIVE"],
             "terminal": [item for item in states if item["status"] != "ACTIVE"],
             "agents": states}
-def pretty(value: dict[str, object]) -> str:
-    lines = [f"DISPATCHER | {value['outcome']} | working={len(value['working'])} terminal={len(value['terminal'])} | triggered={value['triggered']}"]
-    for agent in value["agents"]:
-        lines.append(f"  {agent['status']:<20} {agent['agent_id']} | task={agent['task_id']} | age={agent['age_seconds']}s")
-    return "\n".join(lines)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", type=Path)
@@ -74,14 +71,15 @@ def main() -> int:
     parser.add_argument("--marker", type=Path, default=None)
     parser.add_argument("--once", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--registry", type=Path, default=None)
     args = parser.parse_args()
     marker = args.marker or args.directory / ".dispatcher-wake"
     # Queue through the local app-server daemon so the exact existing task is
     # targeted without opening a second interactive session.
     codex_bin = os.environ.get("CODEX_BIN", "codex")
-    command = [codex_bin, "queue", "--thread", args.session_id, "--message", "Mandatory control-plane transition: read the compact signal, refresh the operational handoff, resume/summon the Architect, dispatch the next approved step, and wait/join. Do not stop at worker DONE; only stop at a legitimate terminal or explicit Owner gate."]
+    command = [codex_bin, "queue", "--thread", args.session_id, "--message", "Check compact control-plane signal:"]
     while True:
-        print(pretty(run_once(args.directory, args.timeout_minutes, marker, command, args.dry_run)), flush=True)
+        print(json.dumps(run_once(args.directory, args.timeout_minutes, marker, command, args.dry_run, args.registry), sort_keys=True), flush=True)
         if args.once:
             return 0
         time.sleep(args.interval_seconds)

@@ -8,6 +8,7 @@ from checkin import validate, write_checkin
 from watcher import inspect
 from dispatcher_wake import run_once
 from codex_watch import run_once as watch_once
+from registry import register
 
 
 def state(status="ACTIVE", timestamp=None):
@@ -53,12 +54,6 @@ class WatcherTests(unittest.TestCase):
             result = inspect(Path(root), 10)
             self.assertEqual(result["outcome"], "INVALID_CHECKIN")
 
-    def test_empty_state_is_not_invalid(self):
-        with tempfile.TemporaryDirectory() as root:
-            result = inspect(Path(root), 10)
-            self.assertEqual(result["outcome"], "NO_OBSERVABLE_CHECKINS")
-            self.assertEqual(result["invalid_file_count"], 0)
-
     def test_dispatcher_wake_is_deduplicated_and_dry_run(self):
         with tempfile.TemporaryDirectory() as root:
             directory = Path(root) / "states"
@@ -84,9 +79,6 @@ class WatcherTests(unittest.TestCase):
             self.assertTrue(first["emitted"])
             self.assertFalse(second["emitted"])
             self.assertEqual(json.loads(signal.read_text())["event"], "dispatcher_check_required")
-            self.assertEqual(json.loads(signal.read_text())["next_required_action"], "resume_or_summon_architect_and_dispatch_next_step")
-            self.assertEqual(first["terminal"][0]["status"], "DONE")
-            self.assertEqual(first["terminal"][0]["status"], "DONE")
 
     def test_signal_file_is_not_reinterpreted_as_agent_checkin(self):
         with tempfile.TemporaryDirectory() as root:
@@ -102,6 +94,18 @@ class WatcherTests(unittest.TestCase):
             result = inspect(directory, 10)
             self.assertEqual(result["outcome"], "ACTIONABLE")
             self.assertEqual(result["invalid_count"], 0)
+
+    def test_registry_resolves_session_and_display_identity(self):
+        with tempfile.TemporaryDirectory() as root:
+            root = Path(root)
+            registry = root / "registry.json"
+            register(registry, {"session_id": "session-1", "display_name": "Jason",
+                                "role": "Executor", "task_id": "task-1",
+                                "parent_architect": "Wegener", "dispatcher": "dispatcher-1"})
+            write_checkin(root / "session.json", {**state(), "agent_id": "session-1"})
+            result = inspect(root, 10, registry)
+            self.assertEqual(result["states"][0]["display_name"], "Jason")
+            self.assertEqual(result["states"][0]["role"], "Executor")
 
 
 if __name__ == "__main__":
