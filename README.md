@@ -27,6 +27,14 @@ it untouched and reports that it needs a project-specific merge. Use
 `--replace-agents` only after reviewing the backup and intended project
 adapter.
 
+On macOS, each project keeps its own state under
+`~/.codex/agent-workflow/<project-id>/state/`, while control-plane programs
+are symlinks to a versioned shared runtime under
+`~/.codex/agent-workflow/runtime/<ref>/`. This allows multiple projects to
+share one implementation without sharing check-ins or histories. Verify an
+installation with `healthcheck.py` using the project source, runtime, and
+state paths.
+
 The installer never changes product documents, `CONTEXT.md`,
 `PROJECT_PROFILE.md`, source code, or existing operational state.
 
