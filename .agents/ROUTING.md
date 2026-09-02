@@ -56,6 +56,11 @@ routing a new model.
    for its result. It may stop only at a legitimate terminal state, an
    explicit Owner decision gate, an unrecoverable failure, or unavailable
    replacement capacity. Worker `DONE` or session idle is not workflow `DONE`.
+10. An Architect may spawn a bounded worker, but every spawned worker must be
+   registered before execution with display identity, role, task, session,
+   parent Architect, and Dispatcher. It must publish `ACTIVE` immediately.
+   Unregistered work is not observable workflow work; escalate
+   `SESSION_UNAVAILABLE` instead of silently creating an independent task.
 
 ## Capability classes
 

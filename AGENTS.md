@@ -245,7 +245,11 @@ it was not. `PROJECT_PROFILE.md` states whether Git is available here.
 The Dispatcher tracks state, creates or resumes the Architect session, and
 relays questions, status, and file references. It must not perform substantive
 planning, execution, review, or decision-making, and it must not inject worker
-reasoning or large briefs into the owner-facing conversation.
+reasoning or large briefs into the owner-facing conversation. The Architect may
+spawn a bounded Executor or Reviewer, but must register that worker in shared
+control-plane state before execution with display name, role, task, session,
+parent Architect, and Dispatcher. The worker must publish `ACTIVE` immediately;
+an unregistered task is `SESSION_UNAVAILABLE`, not invisible workflow work.
 
 ### Dispatcher continue-until-terminal rule
 
