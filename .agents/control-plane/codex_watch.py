@@ -13,8 +13,8 @@ from dispatcher_wake import fingerprint, SIGNALS
 from watcher import inspect
 
 
-def run_once(directory: Path, signal_path: Path, marker: Path, timeout_minutes: float) -> dict[str, object]:
-    result = inspect(directory, timeout_minutes)
+def run_once(directory: Path, signal_path: Path, marker: Path, timeout_minutes: float, registry: Path | None = None) -> dict[str, object]:
+    result = inspect(directory, timeout_minutes, registry)
     outcome = result["outcome"]
     current = fingerprint(directory, result) if outcome in SIGNALS else ""
     previous = marker.read_text(encoding="utf-8").strip() if marker.exists() else ""
@@ -41,12 +41,13 @@ def main() -> int:
     parser.add_argument("--marker", type=Path, default=None)
     parser.add_argument("--interval-seconds", type=float, default=2.0)
     parser.add_argument("--timeout-minutes", type=float, default=10.0)
+    parser.add_argument("--registry", type=Path, default=None)
     parser.add_argument("--once", action="store_true")
     args = parser.parse_args()
     signal = args.signal or args.directory / "dispatcher-check-required.json"
     marker = args.marker or args.directory / ".codex-watch-marker"
     while True:
-        print(json.dumps(run_once(args.directory, signal, marker, args.timeout_minutes), sort_keys=True), flush=True)
+        print(json.dumps(run_once(args.directory, signal, marker, args.timeout_minutes, args.registry), sort_keys=True), flush=True)
         if args.once:
             return 0
         time.sleep(args.interval_seconds)

@@ -14,7 +14,7 @@ import time
 from watcher import inspect
 from watcher import CONTROL_FILES
 
-SIGNALS = {"ACTIONABLE", "TIMEOUT", "INVALID"}
+SIGNALS = {"ACTIONABLE", "TIMEOUT", "INVALID_CHECKIN"}
 TERMINAL = {"DONE", "BLOCKED", "WAITING_INPUT", "SESSION_UNAVAILABLE"}
 
 
@@ -42,8 +42,8 @@ def consume_terminal(directory: Path) -> None:
             path.unlink(missing_ok=True)
 
 
-def run_once(directory: Path, timeout_minutes: float, marker: Path, command: list[str], dry_run: bool) -> dict[str, object]:
-    result = inspect(directory, timeout_minutes)
+def run_once(directory: Path, timeout_minutes: float, marker: Path, command: list[str], dry_run: bool, registry: Path | None = None) -> dict[str, object]:
+    result = inspect(directory, timeout_minutes, registry)
     signal = result["outcome"] in SIGNALS
     current = fingerprint(directory, result) if signal else ""
     previous = marker.read_text(encoding="utf-8").strip() if marker.exists() else ""
@@ -71,6 +71,7 @@ def main() -> int:
     parser.add_argument("--marker", type=Path, default=None)
     parser.add_argument("--once", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--registry", type=Path, default=None)
     args = parser.parse_args()
     marker = args.marker or args.directory / ".dispatcher-wake"
     # Queue through the local app-server daemon so the exact existing task is
@@ -78,7 +79,7 @@ def main() -> int:
     codex_bin = os.environ.get("CODEX_BIN", "codex")
     command = [codex_bin, "queue", "--thread", args.session_id, "--message", "Check compact control-plane signal:"]
     while True:
-        print(json.dumps(run_once(args.directory, args.timeout_minutes, marker, command, args.dry_run), sort_keys=True), flush=True)
+        print(json.dumps(run_once(args.directory, args.timeout_minutes, marker, command, args.dry_run, args.registry), sort_keys=True), flush=True)
         if args.once:
             return 0
         time.sleep(args.interval_seconds)

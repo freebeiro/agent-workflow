@@ -8,6 +8,7 @@ from checkin import validate, write_checkin
 from watcher import inspect
 from dispatcher_wake import run_once
 from codex_watch import run_once as watch_once
+from registry import register
 
 
 def state(status="ACTIVE", timestamp=None):
@@ -39,7 +40,7 @@ class WatcherTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root:
             path = Path(root) / "agent.json"
             path.write_text(json.dumps(state("DONE")))
-            self.assertEqual(inspect(Path(root), 10)["outcome"], "INVALID")
+            self.assertEqual(inspect(Path(root), 10)["outcome"], "INVALID_CHECKIN")
 
     def test_stale_active_agent_times_out(self):
         old = (datetime.now(timezone.utc) - timedelta(minutes=11)).isoformat()
@@ -51,7 +52,7 @@ class WatcherTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root:
             Path(root, "agent.json").write_text(json.dumps({"status": "IDLE"}))
             result = inspect(Path(root), 10)
-            self.assertEqual(result["outcome"], "INVALID")
+            self.assertEqual(result["outcome"], "INVALID_CHECKIN")
 
     def test_dispatcher_wake_is_deduplicated_and_dry_run(self):
         with tempfile.TemporaryDirectory() as root:
@@ -93,6 +94,18 @@ class WatcherTests(unittest.TestCase):
             result = inspect(directory, 10)
             self.assertEqual(result["outcome"], "ACTIONABLE")
             self.assertEqual(result["invalid_count"], 0)
+
+    def test_registry_resolves_session_and_display_identity(self):
+        with tempfile.TemporaryDirectory() as root:
+            root = Path(root)
+            registry = root / "registry.json"
+            register(registry, {"session_id": "session-1", "display_name": "Jason",
+                                "role": "Executor", "task_id": "task-1",
+                                "parent_architect": "Wegener", "dispatcher": "dispatcher-1"})
+            write_checkin(root / "session.json", {**state(), "agent_id": "session-1"})
+            result = inspect(root, 10, registry)
+            self.assertEqual(result["states"][0]["display_name"], "Jason")
+            self.assertEqual(result["states"][0]["role"], "Executor")
 
 
 if __name__ == "__main__":

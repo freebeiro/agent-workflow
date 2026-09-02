@@ -70,7 +70,7 @@ printf 'Installed shared agent workflow at %s (source ref: %s)\n' "$target/.agen
 if [[ "$activate_watch" == true && "$(uname -s)" == "Darwin" ]]; then
   runtime_root="${CODEX_HOME:-$HOME/.codex}/agent-workflow/$project_id"
   mkdir -p "$runtime_root/control-plane" "$runtime_root/state" "$HOME/Library/LaunchAgents"
-  for file in checkin.py watcher.py dispatcher_wake.py codex_watch.py; do
+  for file in checkin.py watcher.py dispatcher_wake.py codex_watch.py registry.py; do
     cp "$source_root/.agents/control-plane/$file" "$runtime_root/control-plane/$file"
     chmod +x "$runtime_root/control-plane/$file"
   done
@@ -91,6 +91,7 @@ plist.write_text(f'''<?xml version="1.0" encoding="UTF-8"?>
 <key>ProgramArguments</key><array>
 <string>/usr/bin/python3</string><string>{script}</string><string>{state}</string>
 <string>--signal</string><string>{state / "dispatcher-check-required.json"}</string>
+<string>--registry</string><string>{state / "registry.json"}</string>
 <string>--interval-seconds</string><string>2</string>
 </array>
 <key>WorkingDirectory</key><string>{root}</string>
