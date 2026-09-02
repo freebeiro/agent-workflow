@@ -61,6 +61,10 @@ routing a new model.
    parent Architect, and Dispatcher. It must publish `ACTIVE` immediately.
    Unregistered work is not observable workflow work; escalate
    `SESSION_UNAVAILABLE` instead of silently creating an independent task.
+11. A bounded Executor starts at the least capable sufficient class and
+   effort, normally `cheap`/low or `mid`/medium. `strong`/high requires an
+   explicit brief reason naming ambiguity, elevated risk, failed verification,
+   or an approved escalation; capability must not be raised merely by habit.
 
 ## Capability classes
 

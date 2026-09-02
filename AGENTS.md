@@ -123,6 +123,8 @@ not scan unrelated repository scope or rely on prior confidence.
 
 The detailed capability, context-budget, reviewer-continuity, recheck,
 anti-anchoring, and replacement rules are canonical in `.agents/ROUTING.md`.
+Bounded Executors use the least capable sufficient route; strong/high is an
+explicit escalation, never the default.
 
 ## Source hierarchy
 
